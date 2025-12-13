@@ -1,0 +1,25 @@
+{
+  "name": "ad-creative-engine",
+  "version": "1.0.0",
+  "description": "E-commerce ad creative generation engine using Mistral AI",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [
+    "advertising",
+    "creative",
+    "mistral",
+    "ai",
+    "e-commerce"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@mistralai/mistralai": "^1.10.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
