@@ -174,7 +174,9 @@ ${JSON.stringify(adCopyVariations, null, 2)}`;
     throw new Error('No valid concepts selected');
   }
   
-  const avgScore = scores.scored.reduce((sum, s) => sum + (s.score || 0), 0) / scores.scored.length;
+  const avgScore = scores.scored.length > 0 
+    ? scores.scored.reduce((sum, s) => sum + (s.score || 0), 0) / scores.scored.length 
+    : 0;
   
   console.log(`✅ Selected top ${topConcepts.length} concepts (avg score: ${avgScore.toFixed(1)})`);
   return topConcepts;
@@ -383,7 +385,13 @@ async function generateAdCreatives(clientBrief) {
     };
     
     // Save to file
-    const outputDir = path.join(__dirname, 'output', clientBrief.clientName.replace(/\s+/g, '-'));
+    // Sanitize client name to prevent path traversal
+    const sanitizedClientName = clientBrief.clientName
+      .replace(/[^a-zA-Z0-9\s-]/g, '')  // Remove special chars except spaces and hyphens
+      .replace(/\s+/g, '-')              // Replace spaces with hyphens
+      .substring(0, 100);                 // Limit length
+    
+    const outputDir = path.join(__dirname, 'output', sanitizedClientName);
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
