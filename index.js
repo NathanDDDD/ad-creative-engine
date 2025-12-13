@@ -386,7 +386,7 @@ async function generateAdCreatives(clientBrief) {
     
     // Save to file
     // Sanitize client name to prevent path traversal
-    const sanitizedClientName = clientBrief.clientName
+    const sanitizedClientName = (clientBrief.clientName || 'default-client')
       .replace(/[^a-zA-Z0-9\s-]/g, '')  // Remove special chars except spaces and hyphens
       .replace(/\s+/g, '-')              // Replace spaces with hyphens
       .substring(0, 100);                 // Limit length
