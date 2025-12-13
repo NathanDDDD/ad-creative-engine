@@ -12,7 +12,12 @@ const fs = require('fs');
 const path = require('path');
 
 // Configuration
-const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY || 'YOUR_API_KEY_HERE';
+const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
+if (!MISTRAL_API_KEY) {
+  console.error('❌ Error: MISTRAL_API_KEY environment variable is not set');
+  console.error('Please set your API key: export MISTRAL_API_KEY="your-key-here"');
+  process.exit(1);
+}
 const client = new Mistral({ apiKey: MISTRAL_API_KEY });
 
 // Models to use
@@ -74,6 +79,10 @@ Make them diverse - different angles, tones, and psychological triggers.`;
     maxTokens: 4000
   });
 
+  if (!response.choices || response.choices.length === 0) {
+    throw new Error('No response from AI model');
+  }
+
   const content = response.choices[0].message.content;
   
   // Extract JSON from response (handle markdown code blocks)
@@ -84,7 +93,16 @@ Make them diverse - different angles, tones, and psychological triggers.`;
     jsonStr = content.split('```')[1].split('```')[0];
   }
   
-  const adCopyVariations = JSON.parse(jsonStr.trim());
+  let adCopyVariations;
+  try {
+    adCopyVariations = JSON.parse(jsonStr.trim());
+  } catch (error) {
+    throw new Error(`Failed to parse AI response as JSON: ${error.message}`);
+  }
+  
+  if (!Array.isArray(adCopyVariations)) {
+    throw new Error('AI response is not an array');
+  }
   
   console.log(`✅ Generated ${adCopyVariations.length} ad copy variations`);
   return adCopyVariations;
@@ -120,6 +138,10 @@ ${JSON.stringify(adCopyVariations, null, 2)}`;
     maxTokens: 3000
   });
 
+  if (!response.choices || response.choices.length === 0) {
+    throw new Error('No response from AI model');
+  }
+
   const content = response.choices[0].message.content;
   let jsonStr = content;
   if (content.includes('```json')) {
@@ -128,10 +150,33 @@ ${JSON.stringify(adCopyVariations, null, 2)}`;
     jsonStr = content.split('```')[1].split('```')[0];
   }
   
-  const scores = JSON.parse(jsonStr.trim());
-  const topConcepts = scores.top20.map(idx => adCopyVariations[idx]);
+  let scores;
+  try {
+    scores = JSON.parse(jsonStr.trim());
+  } catch (error) {
+    throw new Error(`Failed to parse AI scoring response as JSON: ${error.message}`);
+  }
   
-  console.log(`✅ Selected top 20 concepts (avg score: ${(scores.scored.reduce((sum, s) => sum + s.score, 0) / scores.scored.length).toFixed(1)})`);
+  if (!scores.top20 || !Array.isArray(scores.top20)) {
+    throw new Error('AI response missing valid top20 array');
+  }
+  
+  if (!scores.scored || !Array.isArray(scores.scored) || scores.scored.length === 0) {
+    throw new Error('AI response missing valid scored array');
+  }
+  
+  // Validate indices and select top concepts
+  const topConcepts = scores.top20
+    .filter(idx => idx >= 0 && idx < adCopyVariations.length)
+    .map(idx => adCopyVariations[idx]);
+  
+  if (topConcepts.length === 0) {
+    throw new Error('No valid concepts selected');
+  }
+  
+  const avgScore = scores.scored.reduce((sum, s) => sum + (s.score || 0), 0) / scores.scored.length;
+  
+  console.log(`✅ Selected top ${topConcepts.length} concepts (avg score: ${avgScore.toFixed(1)})`);
   return topConcepts;
 }
 
@@ -180,6 +225,10 @@ Format as JSON:
       maxTokens: 500
     });
 
+    if (!response.choices || response.choices.length === 0) {
+      throw new Error(`No response from AI model for ad ${i + 1}`);
+    }
+
     const content = response.choices[0].message.content;
     let jsonStr = content;
     if (content.includes('```json')) {
@@ -188,14 +237,19 @@ Format as JSON:
       jsonStr = content.split('```')[1].split('```')[0];
     }
     
-    const visualDetails = JSON.parse(jsonStr.trim());
+    let visualDetails;
+    try {
+      visualDetails = JSON.parse(jsonStr.trim());
+    } catch (error) {
+      throw new Error(`Failed to parse visual prompt response for ad ${i + 1}: ${error.message}`);
+    }
     
     enhancedConcepts.push({
       ...concept,
-      visualPrompt: visualDetails.primary_prompt,
-      alternativeVisuals: visualDetails.alternatives,
-      layout: visualDetails.layout_suggestion,
-      textPosition: visualDetails.text_overlay_position,
+      visualPrompt: visualDetails.primary_prompt || '',
+      alternativeVisuals: visualDetails.alternatives || [],
+      layout: visualDetails.layout_suggestion || '',
+      textPosition: visualDetails.text_overlay_position || 'center',
       adNumber: i + 1
     });
     
@@ -238,6 +292,10 @@ Format as structured markdown report.`;
     maxTokens: 2000
   });
 
+  if (!response.choices || response.choices.length === 0) {
+    throw new Error('No response from AI model for competitor analysis');
+  }
+
   console.log('✅ Competitor analysis complete');
   return response.choices[0].message.content;
 }
@@ -270,6 +328,10 @@ Format as actionable markdown guide.`;
     temperature: 0.4,
     maxTokens: 1500
   });
+
+  if (!response.choices || response.choices.length === 0) {
+    throw new Error('No response from AI model for testing strategy');
+  }
 
   console.log('✅ Testing strategy created');
   return response.choices[0].message.content;
