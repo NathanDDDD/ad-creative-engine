@@ -18,6 +18,9 @@ class Config:
     LANGSMITH_API_KEY = os.getenv('LANGSMITH_API_KEY', '')
     LANGCHAIN_PROJECT = os.getenv('LANGCHAIN_PROJECT', 'TradeMasterX')
     
+    # Demo mode (use mock data when API unavailable)
+    DEMO_MODE = os.getenv('DEMO_MODE', 'false').lower() == 'true'
+    
     # Paper trading settings
     INITIAL_BALANCE = float(os.getenv('INITIAL_BALANCE', '10000.0'))
     MAX_RISK_PER_TRADE = float(os.getenv('MAX_RISK_PER_TRADE', '0.01'))  # 1%

@@ -118,18 +118,37 @@ To enable:
 Analyze all symbols once and exit:
 
 ```bash
-python app/run_bot.py --once
+python run.py --once
 ```
+
+**Note**: If external APIs are unavailable (e.g., in a sandboxed environment), the bot automatically falls back to demo mode with realistic mock data for testing purposes.
 
 ### Loop Mode (Production)
 
 Run continuously every 15 minutes:
 
 ```bash
-python app/run_bot.py --loop
+python run.py --loop
 ```
 
 Press `Ctrl+C` to stop.
+
+## Demo Mode
+
+When external APIs are unavailable (e.g., no internet access or sandboxed environment), the bot automatically falls back to demo mode with realistic mock data. This allows you to:
+
+- Test the complete workflow
+- Validate decision logic
+- Verify database journaling
+- Check output format
+
+The mock data generator creates realistic price movements with:
+- Proper OHLCV candlestick structure
+- Realistic volatility (~1% per candle)
+- Volume variation
+- Trend patterns
+
+All other logic (indicators, patterns, fusion, risk management, paper execution) operates identically whether using real or mock data.
 
 ## Output Format
 

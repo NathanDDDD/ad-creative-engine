@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 """
 TradeMasterX - Paper Trading Bot for Bybit Futures
-Run with: python app/run_bot.py --once
-          python app/run_bot.py --loop
+Run with: python -m app.run_bot --once
+          python -m app.run_bot --loop
 """
 import argparse
 import json
 import time
+import sys
+import os
 from datetime import datetime
 from typing import Dict, Any
+
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.config import Config
 from app.graph import run_trading_workflow
